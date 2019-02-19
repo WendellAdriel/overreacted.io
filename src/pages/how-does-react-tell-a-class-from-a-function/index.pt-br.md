@@ -70,50 +70,50 @@ Esse blog é para o leitor curioso que deseja saber o *porquê* de o React traba
 
 **Essa é uma longa jornada. Fique firme. Esse artigo não possui muitas informações sobre React, mas mas iremos verificar alguns aspectos sobre `new`, `this`, `class`, arrow functions, `prototype`, `__proto__`, `instanceof` e como essas coisas trabalham juntas em JavaScript. Felizmente você não precisa pensar muito sobre isso quando você *utiliza* o React. Mas se você está implementando o React...**
 
-(Se você quer realmente apenas saber a resposta, navegue para o final.)
+(Se você quer realmente apenas saber a resposta, pule para o final.)
 
 ----
 
-First, we need to understand why it’s important to treat functions and classes differently. Note how we use the `new` operator when calling a class:
+Primeiro, precisamos entender poruqe é importante tratar funções e classes de forma diferente. Veja como usamos o operador `new` quando chamamos uma classe:
 
 ```jsx{5}
-// If Greeting is a function
+// Se Greeting é uma função
 const result = Greeting(props); // <p>Hello</p>
 
-// If Greeting is a class
+// Se Greeting é uma classe
 const instance = new Greeting(props); // Greeting {}
 const result = instance.render(); // <p>Hello</p>
 ```
 
-Let’s get a rough sense of what the `new` operator does in JavaScript.
+Vamos ver o que o operador `new` faz no JavaScript.
 
 ---
 
-In the old days, JavaScript did not have classes. However, you could express a similar pattern to classes using plain functions. **Concretely, you can use *any* function in a role similar to a class constructor by adding `new` before its call:**
+Nos velhos tempos, o JavaScript não possuía classes. Contudo, você poderia criar um padrão semelhante às classes usando apenas funções. **Concretamente, você pode usar *qualquer* função de forma parecida com um construtor de uma classe adicionando o `new` antes de sua chamada:**
 
 ```jsx
-// Just a function
+// Apenas uma função
 function Person(name) {
   this.name = name;
 }
 
 var fred = new Person('Fred'); // ✅ Person {name: 'Fred'}
-var george = Person('George'); // 🔴 Won’t work
+var george = Person('George'); // 🔴 Não irá funcionar
 ```
 
-You can still write code like this today! Try it in DevTools.
+Você ainda pode escrever seu código assim hoje! Experimente nas DevTools.
 
-If you called `Person('Fred')` **without** `new`, `this` inside it would point to something global and useless (for example, `window` or `undefined`). So our code would crash or do something silly like setting `window.name`.
+Se você chamou `Person('Fred')` **sem** o `new`, o `this` dentro dela iria apontar para algo global e seria inútil (por exemplo, `window` ou `undefined`). Então nosso código iria quebrar ou fazer algo estranho como `window.name`.
 
-By adding `new` before the call, we say: “Hey JavaScript, I know `Person` is just a function but let’s pretend it’s something like a class constructor. **Create an `{}` object and point `this` inside the `Person` function to that object so I can assign stuff like `this.name`. Then give that object back to me.**”
+Adicionando o `new` antes da chamada, nós dizemos: "Hey JavaScript, eu sei que `Person` é apenas uma função, mas vamos fingir que ela é algo parecido com um método construtor de uma classe. **Crie um objeto `{}` e aponte o `this` dentro da função `Person` para esse objeto, dessa forma posso atribuir algo como `this.name`. Então retorne esse objeto para mim.**"
 
-That’s what the `new` operator does.
+Isso é o que o operador `new` faz.
 
 ```jsx
-var fred = new Person('Fred'); // Same object as `this` inside `Person`
+var fred = new Person('Fred'); // Mesmo objeto `this` dentro de `Person`
 ```
 
-The `new` operator also makes anything we put on `Person.prototype` available on the `fred` object:
+O operador `new` também faz com que tudo que pusermos em `Person.prototype` esteja disponível no objeto `fred`:
 
 ```jsx{4-6,9}
 function Person(name) {
@@ -127,11 +127,11 @@ var fred = new Person('Fred');
 fred.sayHi();
 ```
 
-This is how people emulated classes before JavaScript added them directly.
+Isso era a forma como as pessoas simulavam classes em JavaScript antes de serem adicionadas diretamente.
 
 ---
 
-So `new` has been around in JavaScript for a while. However, classes are more recent. They let us rewrite the code above to match our intent more closely:
+O `new` já existe por um bom tempo no JavaScript. Porém, classes são mais recente. Elas nos permitem reescrever o código acima para corresponder às nossas intenções de forma mais direta:
 
 ```jsx
 class Person {
@@ -147,25 +147,25 @@ let fred = new Person('Fred');
 fred.sayHi();
 ```
 
-*Capturing developer’s intent* is important in language and API design.
+*Captar as intenções do desenvolvedor* é algo importante no design de APIs e linguagens.
 
-If you write a function, JavaScript can’t guess if it’s meant to be called like `alert()` or if it serves as a constructor like `new Person()`. Forgetting to specify `new` for a function like `Person` would lead to confusing behavior.
+Se você escrever uma função, o JavaScript não sabe dizer se ela deve ser chamada como `alert()` ou se ela serve como um construtor como `new Person()`. Esquecer de especificar o `new` para uma função como `Person` iria gerar um comportamento confuso.
 
-**Class syntax lets us say: “This isn’t just a function — it’s a class and it has a constructor”.** If you forget `new` when calling it, JavaScript will raise an error:
+**A sintaxe das Classes nos permitem dizer: "Isso não é apenas uma função - é uma classe e ela tem um construtor".** Se você esquecer o `new` ao chamar ela, o JavaScript irá emitir um erro:
 
 ```jsx
 let fred = new Person('Fred');
-// ✅  If Person is a function: works fine
-// ✅  If Person is a class: works fine too
+// ✅  Se Person é uma função: funciona sem problemas
+// ✅  Se Person é uma classe: funciona sem problemas também
 
 let george = Person('George'); // We forgot `new`
-// 😳 If Person is a constructor-like function: confusing behavior
-// 🔴 If Person is a class: fails immediately
+// 😳 Se Person é uma função como um construtor: comportamento confuso
+// 🔴 Se Person é uma classe: falha imediatamente
 ```
 
-This helps us catch mistakes early instead of waiting for some obscure bug like `this.name` being treated as `window.name` instead of `george.name`.
+Isso nos ajuda a pegar erros antecipadamente ao invés de esperar algum erro obscuro como `this.name` sendo tratado como `window.name` ao invés de `george.name`.
 
-However, it means that React needs to put `new` before calling any class. It can’t just call it as a regular function, as JavaScript would treat it as an error!
+Então isso quer dizer que o React deve colocar o operador `new` antes de chamar uma classe. Ele não pode apenas chamar como uma função comum, pois o JavaScript iria tratar como um erro!
 
 ```jsx
 class Counter extends React.Component {
@@ -174,63 +174,63 @@ class Counter extends React.Component {
   }
 }
 
-// 🔴 React can't just do this:
+// 🔴 O React não pode fazer assim
 const instance = Counter(props);
 ```
 
-This spells trouble.
+Isso traria problemas.
 
 ---
 
-Before we see how React solves this, it’s important to remember most people using React use compilers like Babel to compile away modern features like classes for older browsers. So we need to consider compilers in our design.
+Antes de vermos como o React resolve isso, é importante lembrar que a maioria das pessoas que utilizam o React usam compiladores como o Babel para compilar funcionalidades modernas como classes para navegadores mais antigos. Então devemos considerar esses compiladores em nosso design.
 
-In early versions of Babel, classes could be called without `new`. However, this was fixed — by generating some extra code:
+Nas primeiras versões do Babel, classes poderiam ser chamadas sem o `new`. Porém, isso foi resolvido - criando um pouco de código extra:
 
 ```jsx
 function Person(name) {
-  // A bit simplified from Babel output:
+  // Um resultado um pouco simplificado do Babel:
   if (!(this instanceof Person)) {
     throw new TypeError("Cannot call a class as a function");
   }
-  // Our code:
+  // Nosso código:
   this.name = name;
 }
 
-new Person('Fred'); // ✅ Okay
-Person('George');   // 🔴 Cannot call a class as a function
+new Person('Fred'); // ✅ Ok
+Person('George');   // 🔴 Não pode chamar uma classe como uma função
 ``` 
 
-You might have seen code like this in your bundle. That’s what all those `_classCallCheck` functions do. (You can reduce the bundle size by opting into the “loose mode” with no checks but this might complicate your eventual transition to real native classes.)
+Você deve ter visto código parecido com esse em seu `bundle`. Isso é o que todas aquelas funções `_classCallCheck` fazem. (Você pode reduzir o tamanho do seu `bundle` ao optar por um "modo livre" sem nenhuma verificação, mas isso pode complicar sua transição eventual para classes nativas.)
 
 ---
 
-By now, you should roughly understand the difference between calling something with `new` or without `new`:
+Agora você deve entender um pouco da diferença entre chamar algo com ou sem o operador `new`:
 
 |  | `new Person()` | `Person()` |
 |---|---|---|
-| `class` | ✅ `this` is a `Person` instance | 🔴 `TypeError`
-| `function` | ✅ `this` is a `Person` instance | 😳 `this` is `window` or `undefined` |
+| `classe` | ✅ `this` é uma instância de `Person` | 🔴 `TypeError`
+| `função` | ✅ `this` é uma instância de `Person` | 😳 `this` é `window` ou `undefined` |
 
-This is why it’s important for React to call your component correctly. **If your component is defined as a class, React needs to use `new` when calling it.**
+Esse é o motivo pelo qual o React deve chamar seu componente corretamente. **Se seu componente é definido como uma classe, o React precisa usar o `new` ao chamar ele.**
 
-So can React just check if something is a class or not?
+Então o React pode apenas checar se algo é uma classe ou não?
 
-Not so easy! Even if we could [tell a class from a function in JavaScript](https://stackoverflow.com/questions/29093396/how-do-you-check-the-difference-between-an-ecmascript-6-class-and-function), this still wouldn’t work for classes processed by tools like Babel. To the browser, they’re just plain functions. Tough luck for React.
+Não é tão fácil! Mesmo que pudéssemos [diferenciar uma classe de uma função em JavaScript](https://stackoverflow.com/questions/29093396/how-do-you-check-the-difference-between-an-ecmascript-6-class-and-function), isso ainda não iria funcionar para classes processadas por ferramentas como o Babel. Para o navegador, elas são apenas funções. Azar para o React.
 
 ---
 
-Okay, so maybe React could just use `new` on every call? Unfortunately, that doesn’t always work either.
+Certo, então talvez o React poderia apenas usar o `new` em todas as chamadas? Infelizmente isso não iria sempre funcionar.
 
-With regular functions, calling them with `new` would give them an object instance as `this`. It’s desirable for functions written as constructor (like our `Person` above), but it would be confusing for function components:
+Com funções comuns, chamar elas com o operador `new` iria dar a elas um objeto de instância como `this`. Isso é o desejado para funções escritas como construtores (como nossa `Person` acima), mas seria confuso para componentes de função:
 
 ```jsx
 function Greeting() {
-  // We wouldn’t expect `this` to be any kind of instance here
+  // Não esperamos que `this` seja nenhum tipo de instância aqui
   return <p>Hello</p>;
 }
 ```
 
-That could be tolerable though. There are two *other* reasons that kill this idea.
+Isso pode ser tolerável. Mas há duas *outras* razões que matam essa ideia.
 
 ---
 
